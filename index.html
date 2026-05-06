@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ghost Logic Kanban</title>
+  <title>Ghost Logic Task Board</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,84 +13,136 @@
       background: #0d1117;
       color: #e6edf3;
       min-height: 100vh;
-      padding: 32px 24px;
+      padding: 28px 20px;
     }
 
     header {
       text-align: center;
-      margin-bottom: 36px;
+      margin-bottom: 28px;
     }
 
     header h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      letter-spacing: -0.5px;
       color: #58a6ff;
+      letter-spacing: -0.4px;
     }
 
-    header p {
-      font-size: 0.85rem;
-      color: #8b949e;
-      margin-top: 4px;
-    }
+    header p { font-size: 0.82rem; color: #8b949e; margin-top: 4px; }
 
-    .board {
+    /* Tabs */
+    .tabs {
       display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      justify-content: center;
-      flex-wrap: wrap;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto 0;
+      border-bottom: 1px solid #30363d;
+      overflow-x: auto;
     }
 
-    .column {
+    .tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #8b949e;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 10px 18px;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+
+    .tab:hover { color: #e6edf3; }
+    .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; font-weight: 600; }
+
+    /* Views */
+    .view { display: none; padding-top: 24px; }
+    .view.active { display: block; }
+
+    /* Projects overview */
+    .projects-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      max-width: 1200px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+
+    .project-card {
       background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 12px;
-      width: 320px;
-      min-width: 280px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      border-radius: 10px;
+      padding: 16px 18px;
+      width: 220px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      position: relative;
     }
 
-    .column-header {
-      padding: 16px 18px 12px;
-      border-bottom: 1px solid #30363d;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .project-card:hover {
+      border-color: #58a6ff55;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
-    .column-title {
+    .project-card-name {
       font-size: 0.9rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
+      color: #e6edf3;
+      margin-bottom: 10px;
     }
 
-    .column[data-col="todo"] .column-title   { color: #8b949e; }
-    .column[data-col="inprogress"] .column-title { color: #f0b429; }
-    .column[data-col="done"] .column-title   { color: #3fb950; }
-
-    .card-count {
-      background: #30363d;
-      color: #8b949e;
-      font-size: 0.72rem;
-      font-weight: 600;
-      border-radius: 20px;
-      padding: 2px 8px;
+    .project-card-stats {
+      display: flex;
+      gap: 8px;
     }
 
-    .add-card-form {
-      padding: 12px 14px;
-      border-bottom: 1px solid #21262d;
+    .stat {
+      flex: 1;
+      text-align: center;
+      background: #0d1117;
+      border-radius: 6px;
+      padding: 6px 4px;
+    }
+
+    .stat-num { font-size: 1rem; font-weight: 700; }
+    .stat-label { font-size: 0.62rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+
+    .stat.backlog .stat-num    { color: #8b949e; }
+    .stat.inprogress .stat-num { color: #f0b429; }
+    .stat.done .stat-num       { color: #3fb950; }
+
+    .project-card-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #484f58;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .project-card-delete:hover { color: #f85149; background: #21262d; }
+
+    .add-project-form {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px 18px;
+      width: 220px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .add-card-form input,
-    .add-card-form textarea {
+    .add-project-form input {
       background: #0d1117;
       border: 1px solid #30363d;
       border-radius: 6px;
@@ -98,26 +150,14 @@
       font-family: 'Inter', sans-serif;
       font-size: 0.82rem;
       padding: 7px 10px;
-      resize: none;
-      transition: border-color 0.15s;
       outline: none;
+      transition: border-color 0.15s;
     }
 
-    .add-card-form input:focus,
-    .add-card-form textarea:focus {
-      border-color: #58a6ff;
-    }
+    .add-project-form input:focus { border-color: #58a6ff; }
+    .add-project-form input::placeholder { color: #484f58; }
 
-    .add-card-form input::placeholder,
-    .add-card-form textarea::placeholder {
-      color: #484f58;
-    }
-
-    .add-card-form textarea {
-      height: 52px;
-    }
-
-    .add-btn {
+    .add-project-btn {
       background: #21262d;
       border: 1px solid #30363d;
       border-radius: 6px;
@@ -127,179 +167,556 @@
       font-size: 0.8rem;
       font-weight: 500;
       padding: 6px 10px;
-      text-align: left;
       transition: background 0.15s, color 0.15s;
     }
 
-    .add-btn:hover { background: #30363d; color: #e6edf3; }
+    .add-project-btn:hover { background: #30363d; color: #e6edf3; }
+
+    /* Board view */
+    .board-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label { font-size: 0.78rem; color: #8b949e; white-space: nowrap; }
+
+    .filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .filter-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      color: #8b949e;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 12px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .filter-btn:hover { background: #30363d; color: #e6edf3; }
+    .filter-btn.active { background: #1f3a5f; border-color: #58a6ff; color: #58a6ff; }
+
+    /* Add task form */
+    .add-form {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 18px;
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .add-form input,
+    .add-form select {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .add-form input:focus,
+    .add-form select:focus { border-color: #58a6ff; }
+    .add-form input::placeholder { color: #484f58; }
+    .add-form select option { background: #161b22; }
+
+    .submit-btn {
+      background: #238636;
+      border: 1px solid #2ea043;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .submit-btn:hover { background: #2ea043; }
+
+    /* Board */
+    .board {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .column {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      width: 340px;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .column-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .column[data-col="backlog"] .column-title    { color: #8b949e; }
+    .column[data-col="inprogress"] .column-title { color: #f0b429; }
+    .column[data-col="done"] .column-title       { color: #3fb950; }
+
+    .card-count {
+      background: #30363d;
+      color: #8b949e;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
 
     .cards-container {
       padding: 10px;
-      min-height: 80px;
+      min-height: 60px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      transition: background 0.15s;
     }
 
-    .cards-container.drag-over {
-      background: #1f2937;
-      border-radius: 8px;
-    }
+    .cards-container.drag-over { background: #1c2128; border-radius: 8px; }
+
+    .empty-state { color: #484f58; font-size: 0.76rem; text-align: center; padding: 16px 0 8px; }
 
     .card {
       background: #1c2128;
       border: 1px solid #30363d;
       border-radius: 8px;
-      padding: 12px 14px;
+      padding: 11px 13px;
       cursor: grab;
       position: relative;
       transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
       user-select: none;
     }
 
-    .card:hover {
-      border-color: #58a6ff44;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    .card:hover { border-color: #58a6ff44; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .card.dragging { opacity: 0.35; cursor: grabbing; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
     }
 
-    .card.dragging {
-      opacity: 0.4;
-      cursor: grabbing;
-    }
-
-    .card-title {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #e6edf3;
-      padding-right: 22px;
-      line-height: 1.4;
-    }
-
-    .card-notes {
-      font-size: 0.78rem;
-      color: #8b949e;
-      margin-top: 6px;
-      line-height: 1.45;
-      white-space: pre-wrap;
-    }
+    .card-title { font-size: 0.855rem; font-weight: 500; color: #e6edf3; line-height: 1.4; flex: 1; }
 
     .card-delete {
-      position: absolute;
-      top: 8px;
-      right: 8px;
       background: none;
       border: none;
       color: #484f58;
       cursor: pointer;
-      font-size: 1rem;
-      line-height: 1;
-      padding: 2px 4px;
+      font-size: 0.9rem;
+      padding: 1px 4px;
       border-radius: 4px;
+      flex-shrink: 0;
       transition: color 0.15s, background 0.15s;
     }
 
     .card-delete:hover { color: #f85149; background: #21262d; }
 
-    .card-meta {
-      font-size: 0.7rem;
-      color: #484f58;
+    .card-project {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-top: 8px;
+      gap: 6px;
     }
 
-    .empty-state {
-      text-align: center;
-      color: #484f58;
-      font-size: 0.78rem;
-      padding: 20px 0 10px;
+    .assignee-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 2px 8px;
+      border: 1px solid;
     }
 
-    @media (max-width: 700px) {
+    .assignee-badge.sam    { color: #58a6ff; border-color: #58a6ff44; background: #58a6ff11; }
+    .assignee-badge.david  { color: #bc8cff; border-color: #bc8cff44; background: #bc8cff11; }
+    .assignee-badge.deakin { color: #f0b429; border-color: #f0b42944; background: #f0b42911; }
+
+    .priority-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+
+    .priority-badge.high   { color: #f85149; background: #f8514911; }
+    .priority-badge.low    { color: #484f58; background: #21262d; }
+
+    .card-date { font-size: 0.67rem; color: #484f58; margin-left: auto; }
+
+    .move-btns { display: flex; gap: 4px; margin-top: 7px; }
+
+    .move-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #8b949e;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .move-btn:hover { background: #30363d; color: #e6edf3; }
+
+    @media (max-width: 900px) {
+      .add-form { grid-template-columns: 1fr 1fr; }
+      .submit-btn { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 600px) {
+      .add-form { grid-template-columns: 1fr; }
       .board { flex-direction: column; align-items: center; }
-      .column { width: 100%; max-width: 420px; }
+      .column { width: 100%; max-width: 440px; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Ghost Logic Kanban</h1>
-  <p>Drag cards between columns. Data saved locally.</p>
+  <h1>Ghost Logic Task Board</h1>
+  <p>Track tasks by project. Assign to Sam, David, or Deakin.</p>
 </header>
 
-<div class="board" id="board">
-  <div class="column" data-col="todo">
-    <div class="column-header">
-      <span class="column-title">To Do</span>
-      <span class="card-count" id="count-todo">0</span>
-    </div>
-    <div class="add-card-form" id="form-todo">
-      <input type="text" placeholder="Card title..." id="title-todo" maxlength="120" />
-      <textarea placeholder="Notes (optional)..." id="notes-todo"></textarea>
-      <button class="add-btn" onclick="addCard('todo')">+ Add Card</button>
-    </div>
-    <div class="cards-container" id="cards-todo"></div>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('projects')">Projects</button>
+  <button class="tab" onclick="switchTab('board')">Board</button>
+</div>
+
+<!-- PROJECTS VIEW -->
+<div class="view active" id="view-projects">
+  <div class="projects-grid" id="projects-grid"></div>
+</div>
+
+<!-- BOARD VIEW -->
+<div class="view" id="view-board">
+  <div class="board-controls">
+    <span class="filter-label">Project:</span>
+    <div class="filter-btns" id="filter-btns"></div>
   </div>
 
-  <div class="column" data-col="inprogress">
-    <div class="column-header">
-      <span class="column-title">In Progress</span>
-      <span class="card-count" id="count-inprogress">0</span>
+  <form class="add-form" onsubmit="addTask(event)">
+    <div class="form-group">
+      <label>Task</label>
+      <input type="text" id="f-title" placeholder="What needs to get done?" maxlength="140" required />
     </div>
-    <div class="add-card-form" id="form-inprogress">
-      <input type="text" placeholder="Card title..." id="title-inprogress" maxlength="120" />
-      <textarea placeholder="Notes (optional)..." id="notes-inprogress"></textarea>
-      <button class="add-btn" onclick="addCard('inprogress')">+ Add Card</button>
+    <div class="form-group">
+      <label>Project</label>
+      <select id="f-project"></select>
     </div>
-    <div class="cards-container" id="cards-inprogress"></div>
-  </div>
+    <div class="form-group">
+      <label>Assign To</label>
+      <select id="f-assignee">
+        <option value="sam">Sam</option>
+        <option value="david">David</option>
+        <option value="deakin">Deakin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Priority</label>
+      <select id="f-priority">
+        <option value="normal">Normal</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <button type="submit" class="submit-btn">+ Add Task</button>
+  </form>
 
-  <div class="column" data-col="done">
-    <div class="column-header">
-      <span class="column-title">Done</span>
-      <span class="card-count" id="count-done">0</span>
+  <div class="board" id="board">
+    <div class="column" data-col="backlog">
+      <div class="column-header">
+        <span class="column-title">Backlog</span>
+        <span class="card-count" id="count-backlog">0</span>
+      </div>
+      <div class="cards-container" id="cards-backlog"></div>
     </div>
-    <div class="add-card-form" id="form-done">
-      <input type="text" placeholder="Card title..." id="title-done" maxlength="120" />
-      <textarea placeholder="Notes (optional)..." id="notes-done"></textarea>
-      <button class="add-btn" onclick="addCard('done')">+ Add Card</button>
+    <div class="column" data-col="inprogress">
+      <div class="column-header">
+        <span class="column-title">In Progress</span>
+        <span class="card-count" id="count-inprogress">0</span>
+      </div>
+      <div class="cards-container" id="cards-inprogress"></div>
     </div>
-    <div class="cards-container" id="cards-done"></div>
+    <div class="column" data-col="done">
+      <div class="column-header">
+        <span class="column-title">Done</span>
+        <span class="card-count" id="count-done">0</span>
+      </div>
+      <div class="cards-container" id="cards-done"></div>
+    </div>
   </div>
 </div>
 
 <script>
-  const COLS = ['todo', 'inprogress', 'done'];
-  const STORAGE_KEY = 'ghostlogic-kanban-v1';
-  let dragCard = null;
-  let dragSourceCol = null;
+  const COLS      = ['backlog', 'inprogress', 'done'];
+  const COL_LABEL = { backlog: 'Backlog', inprogress: 'In Progress', done: 'Done' };
+  const TASK_KEY  = 'ghostlogic-tasks-v2';
+  const PROJ_KEY  = 'ghostlogic-projects-v1';
 
-  function loadData() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { todo: [], inprogress: [], done: [] }; }
-    catch { return { todo: [], inprogress: [], done: [] }; }
+  const DEFAULT_PROJECTS = [
+    'ai-sales-trainer','shopping-assistant','reptrack',
+    'sms-lead-nurture','kanban-board','Jarvis','Ghost Logic','DCC'
+  ];
+
+  let activeFilter = 'all';
+  let dragId = null, dragCol = null;
+
+  // ---- Storage ----
+  function loadTasks() {
+    try { return JSON.parse(localStorage.getItem(TASK_KEY)) || { backlog:[], inprogress:[], done:[] }; }
+    catch { return { backlog:[], inprogress:[], done:[] }; }
   }
 
-  function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  function saveTasks(d) { localStorage.setItem(TASK_KEY, JSON.stringify(d)); }
+
+  function loadProjects() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(PROJ_KEY));
+      return stored && stored.length ? stored : [...DEFAULT_PROJECTS];
+    } catch { return [...DEFAULT_PROJECTS]; }
   }
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  function saveProjects(p) { localStorage.setItem(PROJ_KEY, JSON.stringify(p)); }
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+  function fmt(ts) {
+    return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric' });
   }
 
-  function formatDate(ts) {
-    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function renderAll() {
-    const data = loadData();
+  // ---- Tabs ----
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      t.classList.toggle('active', ['projects','board'][i] === tab);
+    });
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + tab).classList.add('active');
+    if (tab === 'board') renderBoard();
+    if (tab === 'projects') renderProjects();
+  }
+
+  // ---- Projects view ----
+  function renderProjects() {
+    const projects = loadProjects();
+    const tasks    = loadTasks();
+    const grid     = document.getElementById('projects-grid');
+    grid.innerHTML = '';
+
+    projects.forEach(name => {
+      const counts = { backlog:0, inprogress:0, done:0 };
+      COLS.forEach(col => {
+        counts[col] = tasks[col].filter(t => t.project === name).length;
+      });
+      const total = counts.backlog + counts.inprogress + counts.done;
+
+      const card = document.createElement('div');
+      card.className = 'project-card';
+      card.innerHTML = `
+        <button class="project-card-delete" onclick="deleteProject('${esc(name)}',event)" title="Remove project">x</button>
+        <div class="project-card-name">${esc(name)}</div>
+        <div class="project-card-stats">
+          <div class="stat backlog">
+            <div class="stat-num">${counts.backlog}</div>
+            <div class="stat-label">Backlog</div>
+          </div>
+          <div class="stat inprogress">
+            <div class="stat-num">${counts.inprogress}</div>
+            <div class="stat-label">Active</div>
+          </div>
+          <div class="stat done">
+            <div class="stat-num">${counts.done}</div>
+            <div class="stat-label">Done</div>
+          </div>
+        </div>
+      `;
+      card.addEventListener('click', e => {
+        if (e.target.classList.contains('project-card-delete')) return;
+        activeFilter = name;
+        switchTab('board');
+      });
+      grid.appendChild(card);
+    });
+
+    // Add project form
+    const addCard = document.createElement('div');
+    addCard.className = 'add-project-form';
+    addCard.innerHTML = `
+      <input type="text" id="new-project-input" placeholder="New project name..." maxlength="40" />
+      <button class="add-project-btn" onclick="addProject()">+ Add Project</button>
+    `;
+    grid.appendChild(addCard);
+
+    document.getElementById('new-project-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addProject(); }
+    });
+  }
+
+  function addProject() {
+    const input = document.getElementById('new-project-input');
+    const name  = input.value.trim();
+    if (!name) return;
+    const projects = loadProjects();
+    if (projects.includes(name)) { input.value = ''; return; }
+    projects.push(name);
+    saveProjects(projects);
+    input.value = '';
+    renderProjects();
+    refreshProjectDropdowns();
+  }
+
+  function deleteProject(name, e) {
+    e.stopPropagation();
+    if (!confirm(`Remove project "${name}"? Tasks will remain but lose their project tag.`)) return;
+    const projects = loadProjects().filter(p => p !== name);
+    saveProjects(projects);
+    renderProjects();
+    refreshProjectDropdowns();
+  }
+
+  // ---- Board view ----
+  function refreshProjectDropdowns() {
+    const projects = loadProjects();
+    const sel = document.getElementById('f-project');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    if (projects.includes(cur)) sel.value = cur;
+  }
+
+  function renderFilters() {
+    const projects = loadProjects();
+    const container = document.getElementById('filter-btns');
+    container.innerHTML = '';
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
+    allBtn.textContent = 'All';
+    allBtn.onclick = () => { activeFilter = 'all'; renderBoard(); };
+    container.appendChild(allBtn);
+
+    projects.forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (activeFilter === name ? ' active' : '');
+      btn.textContent = name;
+      btn.onclick = () => { activeFilter = name; renderBoard(); };
+      container.appendChild(btn);
+    });
+  }
+
+  function addTask(e) {
+    e.preventDefault();
+    const title    = document.getElementById('f-title').value.trim();
+    const project  = document.getElementById('f-project').value;
+    const assignee = document.getElementById('f-assignee').value;
+    const priority = document.getElementById('f-priority').value;
+    if (!title) return;
+
+    const data = loadTasks();
+    data.backlog.unshift({ id: uid(), title, project, assignee, priority, created: Date.now() });
+    saveTasks(data);
+    document.getElementById('f-title').value = '';
+    renderBoard();
+    renderProjects();
+  }
+
+  function moveCard(id, fromCol, toCol) {
+    const data = loadTasks();
+    const idx  = data[fromCol].findIndex(c => c.id === id);
+    if (idx === -1) return;
+    const [card] = data[fromCol].splice(idx, 1);
+    data[toCol].push(card);
+    saveTasks(data);
+    renderBoard();
+    renderProjects();
+  }
+
+  function deleteCard(col, id) {
+    if (!confirm('Delete this task?')) return;
+    const data = loadTasks();
+    data[col] = data[col].filter(c => c.id !== id);
+    saveTasks(data);
+    renderBoard();
+    renderProjects();
+  }
+
+  function renderBoard() {
+    refreshProjectDropdowns();
+    renderFilters();
+
+    const data = loadTasks();
     COLS.forEach(col => {
       const container = document.getElementById('cards-' + col);
-      const cards = data[col] || [];
+      let cards = data[col] || [];
+      if (activeFilter !== 'all') cards = cards.filter(c => c.project === activeFilter);
       document.getElementById('count-' + col).textContent = cards.length;
 
-      if (cards.length === 0) {
-        container.innerHTML = '<div class="empty-state">No cards yet</div>';
+      if (!cards.length) {
+        container.innerHTML = '<div class="empty-state">Empty</div>';
+        attachDrop(container, col);
         return;
       }
 
@@ -308,99 +725,69 @@
         const el = document.createElement('div');
         el.className = 'card';
         el.draggable = true;
-        el.dataset.id = card.id;
+        el.dataset.id  = card.id;
         el.dataset.col = col;
 
+        const prevCol = COLS[COLS.indexOf(col) - 1];
+        const nextCol = COLS[COLS.indexOf(col) + 1];
+
+        const moveBtns = [
+          prevCol ? `<button class="move-btn" onclick="moveCard('${card.id}','${col}','${prevCol}')">&larr; ${COL_LABEL[prevCol]}</button>` : '',
+          nextCol ? `<button class="move-btn" onclick="moveCard('${card.id}','${col}','${nextCol}')">${COL_LABEL[nextCol]} &rarr;</button>` : '',
+        ].join('');
+
+        const priorityBadge = card.priority !== 'normal'
+          ? `<span class="priority-badge ${card.priority}">${card.priority.toUpperCase()}</span>` : '';
+
         el.innerHTML = `
-          <button class="card-delete" onclick="deleteCard('${col}','${card.id}')" title="Delete">x</button>
-          <div class="card-title">${escHtml(card.title)}</div>
-          ${card.notes ? `<div class="card-notes">${escHtml(card.notes)}</div>` : ''}
-          <div class="card-meta">Added ${formatDate(card.created)}</div>
+          <div class="card-top">
+            <div class="card-title">${esc(card.title)}</div>
+            <button class="card-delete" onclick="deleteCard('${col}','${card.id}')" title="Delete">x</button>
+          </div>
+          ${card.project ? `<div class="card-project">${esc(card.project)}</div>` : ''}
+          <div class="card-footer">
+            <span class="assignee-badge ${card.assignee}">${card.assignee.charAt(0).toUpperCase()+card.assignee.slice(1)}</span>
+            ${priorityBadge}
+            <span class="card-date">${fmt(card.created)}</span>
+          </div>
+          <div class="move-btns">${moveBtns}</div>
         `;
 
         el.addEventListener('dragstart', e => {
-          dragCard = card.id;
-          dragSourceCol = col;
+          dragId = card.id; dragCol = col;
           setTimeout(() => el.classList.add('dragging'), 0);
           e.dataTransfer.effectAllowed = 'move';
         });
 
         el.addEventListener('dragend', () => {
           el.classList.remove('dragging');
-          dragCard = null;
-          dragSourceCol = null;
+          dragId = null; dragCol = null;
           document.querySelectorAll('.cards-container').forEach(c => c.classList.remove('drag-over'));
         });
 
         container.appendChild(el);
       });
 
-      setupDropZone(container, col);
+      attachDrop(container, col);
     });
   }
 
-  function setupDropZone(container, col) {
+  function attachDrop(container, col) {
     container.addEventListener('dragover', e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       container.classList.add('drag-over');
     });
-
     container.addEventListener('dragleave', e => {
-      if (!container.contains(e.relatedTarget)) {
-        container.classList.remove('drag-over');
-      }
+      if (!container.contains(e.relatedTarget)) container.classList.remove('drag-over');
     });
-
     container.addEventListener('drop', e => {
       e.preventDefault();
       container.classList.remove('drag-over');
-      if (!dragCard || dragSourceCol === col) return;
-
-      const data = loadData();
-      const srcArr = data[dragSourceCol];
-      const idx = srcArr.findIndex(c => c.id === dragCard);
-      if (idx === -1) return;
-
-      const [moved] = srcArr.splice(idx, 1);
-      data[col].push(moved);
-      saveData(data);
-      renderAll();
+      if (!dragId || dragCol === col) return;
+      moveCard(dragId, dragCol, col);
     });
   }
 
-  function addCard(col) {
-    const titleEl = document.getElementById('title-' + col);
-    const notesEl = document.getElementById('notes-' + col);
-    const title = titleEl.value.trim();
-    if (!title) { titleEl.focus(); return; }
-
-    const data = loadData();
-    data[col].push({ id: uid(), title, notes: notesEl.value.trim(), created: Date.now() });
-    saveData(data);
-    titleEl.value = '';
-    notesEl.value = '';
-    renderAll();
-  }
-
-  function deleteCard(col, id) {
-    const data = loadData();
-    data[col] = data[col].filter(c => c.id !== id);
-    saveData(data);
-    renderAll();
-  }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  COLS.forEach(col => {
-    document.getElementById('title-' + col).addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); addCard(col); }
-    });
-  });
-
-  renderAll();
+  renderProjects();
 </script>
-</body>
-</html>
