@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghost Logic Kanban</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #58a6ff;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+
+    .board {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      width: 320px;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .column-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .column-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .column[data-col="todo"] .column-title   { color: #8b949e; }
+    .column[data-col="inprogress"] .column-title { color: #f0b429; }
+    .column[data-col="done"] .column-title   { color: #3fb950; }
+
+    .card-count {
+      background: #30363d;
+      color: #8b949e;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
+
+    .add-card-form {
+      padding: 12px 14px;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-card-form input,
+    .add-card-form textarea {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      padding: 7px 10px;
+      resize: none;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .add-card-form input:focus,
+    .add-card-form textarea:focus {
+      border-color: #58a6ff;
+    }
+
+    .add-card-form input::placeholder,
+    .add-card-form textarea::placeholder {
+      color: #484f58;
+    }
+
+    .add-card-form textarea {
+      height: 52px;
+    }
+
+    .add-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 10px;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .add-btn:hover { background: #30363d; color: #e6edf3; }
+
+    .cards-container {
+      padding: 10px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+
+    .cards-container.drag-over {
+      background: #1f2937;
+      border-radius: 8px;
+    }
+
+    .card {
+      background: #1c2128;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: grab;
+      position: relative;
+      transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
+      user-select: none;
+    }
+
+    .card:hover {
+      border-color: #58a6ff44;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+
+    .card-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #e6edf3;
+      padding-right: 22px;
+      line-height: 1.4;
+    }
+
+    .card-notes {
+      font-size: 0.78rem;
+      color: #8b949e;
+      margin-top: 6px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .card-delete {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #484f58;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .card-delete:hover { color: #f85149; background: #21262d; }
+
+    .card-meta {
+      font-size: 0.7rem;
+      color: #484f58;
+      margin-top: 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #484f58;
+      font-size: 0.78rem;
+      padding: 20px 0 10px;
+    }
+
+    @media (max-width: 700px) {
+      .board { flex-direction: column; align-items: center; }
+      .column { width: 100%; max-width: 420px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Ghost Logic Kanban</h1>
+  <p>Drag cards between columns. Data saved locally.</p>
+</header>
+
+<div class="board" id="board">
+  <div class="column" data-col="todo">
+    <div class="column-header">
+      <span class="column-title">To Do</span>
+      <span class="card-count" id="count-todo">0</span>
+    </div>
+    <div class="add-card-form" id="form-todo">
+      <input type="text" placeholder="Card title..." id="title-todo" maxlength="120" />
+      <textarea placeholder="Notes (optional)..." id="notes-todo"></textarea>
+      <button class="add-btn" onclick="addCard('todo')">+ Add Card</button>
+    </div>
+    <div class="cards-container" id="cards-todo"></div>
+  </div>
+
+  <div class="column" data-col="inprogress">
+    <div class="column-header">
+      <span class="column-title">In Progress</span>
+      <span class="card-count" id="count-inprogress">0</span>
+    </div>
+    <div class="add-card-form" id="form-inprogress">
+      <input type="text" placeholder="Card title..." id="title-inprogress" maxlength="120" />
+      <textarea placeholder="Notes (optional)..." id="notes-inprogress"></textarea>
+      <button class="add-btn" onclick="addCard('inprogress')">+ Add Card</button>
+    </div>
+    <div class="cards-container" id="cards-inprogress"></div>
+  </div>
+
+  <div class="column" data-col="done">
+    <div class="column-header">
+      <span class="column-title">Done</span>
+      <span class="card-count" id="count-done">0</span>
+    </div>
+    <div class="add-card-form" id="form-done">
+      <input type="text" placeholder="Card title..." id="title-done" maxlength="120" />
+      <textarea placeholder="Notes (optional)..." id="notes-done"></textarea>
+      <button class="add-btn" onclick="addCard('done')">+ Add Card</button>
+    </div>
+    <div class="cards-container" id="cards-done"></div>
+  </div>
+</div>
+
+<script>
+  const COLS = ['todo', 'inprogress', 'done'];
+  const STORAGE_KEY = 'ghostlogic-kanban-v1';
+  let dragCard = null;
+  let dragSourceCol = null;
+
+  function loadData() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { todo: [], inprogress: [], done: [] }; }
+    catch { return { todo: [], inprogress: [], done: [] }; }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function formatDate(ts) {
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function renderAll() {
+    const data = loadData();
+    COLS.forEach(col => {
+      const container = document.getElementById('cards-' + col);
+      const cards = data[col] || [];
+      document.getElementById('count-' + col).textContent = cards.length;
+
+      if (cards.length === 0) {
+        container.innerHTML = '<div class="empty-state">No cards yet</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      cards.forEach(card => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.draggable = true;
+        el.dataset.id = card.id;
+        el.dataset.col = col;
+
+        el.innerHTML = `
+          <button class="card-delete" onclick="deleteCard('${col}','${card.id}')" title="Delete">x</button>
+          <div class="card-title">${escHtml(card.title)}</div>
+          ${card.notes ? `<div class="card-notes">${escHtml(card.notes)}</div>` : ''}
+          <div class="card-meta">Added ${formatDate(card.created)}</div>
+        `;
+
+        el.addEventListener('dragstart', e => {
+          dragCard = card.id;
+          dragSourceCol = col;
+          setTimeout(() => el.classList.add('dragging'), 0);
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        el.addEventListener('dragend', () => {
+          el.classList.remove('dragging');
+          dragCard = null;
+          dragSourceCol = null;
+          document.querySelectorAll('.cards-container').forEach(c => c.classList.remove('drag-over'));
+        });
+
+        container.appendChild(el);
+      });
+
+      setupDropZone(container, col);
+    });
+  }
+
+  function setupDropZone(container, col) {
+    container.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.classList.add('drag-over');
+    });
+
+    container.addEventListener('dragleave', e => {
+      if (!container.contains(e.relatedTarget)) {
+        container.classList.remove('drag-over');
+      }
+    });
+
+    container.addEventListener('drop', e => {
+      e.preventDefault();
+      container.classList.remove('drag-over');
+      if (!dragCard || dragSourceCol === col) return;
+
+      const data = loadData();
+      const srcArr = data[dragSourceCol];
+      const idx = srcArr.findIndex(c => c.id === dragCard);
+      if (idx === -1) return;
+
+      const [moved] = srcArr.splice(idx, 1);
+      data[col].push(moved);
+      saveData(data);
+      renderAll();
+    });
+  }
+
+  function addCard(col) {
+    const titleEl = document.getElementById('title-' + col);
+    const notesEl = document.getElementById('notes-' + col);
+    const title = titleEl.value.trim();
+    if (!title) { titleEl.focus(); return; }
+
+    const data = loadData();
+    data[col].push({ id: uid(), title, notes: notesEl.value.trim(), created: Date.now() });
+    saveData(data);
+    titleEl.value = '';
+    notesEl.value = '';
+    renderAll();
+  }
+
+  function deleteCard(col, id) {
+    const data = loadData();
+    data[col] = data[col].filter(c => c.id !== id);
+    saveData(data);
+    renderAll();
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  COLS.forEach(col => {
+    document.getElementById('title-' + col).addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addCard(col); }
+    });
+  });
+
+  renderAll();
+</script>
+</body>
+</html>
